@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Superapoyo</title>
+</head>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vant@2.12/lib/index.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6/dist/vue.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vant@2.12/lib/vant.min.js"></script>
+<script src="./axios.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/rem/1.3.4/js/rem.js"></script>
+<script type="text/javascript">
+    window.onload = function () {
+        getRem(750, 100)
+    };
+    window.onresize = function () {
+        getRem(750, 100)
+    };
+    function getRem(pwidth, prem) {
+        var html = document.getElementsByTagName("html")[0];
+        var oWidth = document.body.clientWidth || document.documentElement.clientWidth;
+        html.style.fontSize = oWidth / pwidth * prem + "px";
+    }
+</script>
+
+<body>
+    <div class="app" id="app">
+        <img src="./img/banner.png" class="banner" alt="">
+        <img src="./img/logo.png" class="logo" alt="">
+        <div class="content">
+            <div class="bigitem">
+                <div class="item">
+                    <div class="title title2">
+                        <p>0 interés se limita <br> a los primeros 1000</p>
+                    </div>
+                    <div class=" form">
+                        <!-- 电话 -->
+                        <van-field v-model="mobile" placeholder="Número de teléfono" maxlength='11'></van-field>
+                        <!-- 图形验证码 -->
+                        <van-field v-if="codeUrl" style="font-size:1rem" v-model="imgCode" placeholder="Introducir OTP">
+                            <template #button>
+                                <img @click="changeImg" class="code" :src="codeUrl" alt="">
+                            </template>
+                        </van-field>
+                        <!-- 获取短信验证码 -->
+                        <div class="btnbtn">
+                            <van-field style="font-size:1rem;width:60%" v-model="authCode" placeholder="Introducir OTP">
+                                <template #button>
+
+                                </template>
+                            </van-field>
+                            <button class="btn" v-if="!showNum" @click="getCode">Enviar</button>
+                            <button class="btn" v-if="showNum" disabled>{{butNum}}Reenviar después de ...
+                                segundos</button>
+                        </div>
+                        <!-- 登录按钮 -->
+                        <button @click="login" class="sumbit">Registrar y obtener 0 interés</button>
+                        <van-checkbox shape="square" checked-color="#FFA63D" v-model="checked"><span
+                                style="color:#999">He leído y acepto la</span> <u style="color:#ffa63D"
+                                @click="goPrivacy">política de
+                                privacidad</u></van-checkbox>
+                    </div>
+                </div>
+            </div>
+            <div class="bigitem">
+                <div class="item">
+                    <ul class="twoList">
+                        <li>
+                            <img src="./img/li_0.png" alt="">
+                            <div>
+                                <p class="t">0 interés y 0 comisión</p>
+                                <p>En el primer préstamo</p>
+                            </div>
+                        </li>
+                        <li>
+                            <img src="./img/li_1.png" alt="">
+                            <div>
+                                <p class="t">$20,000</p>
+                                <p>Monto máximo del préstamo</p>
+                            </div>
+                        </li>
+                        <li>
+                            <img src="./img/li_2.png" alt="">
+                            <div>
+                                <p class="t">3 min</p>
+                                <p>Depósito más rápido</p>
+                            </div>
+                        </li>
+                        <li>
+                            <img src="./img/li_3.png" alt="">
+                            <div>
+                                <p class="t">Solo 3 pasos</p>
+                                <p>Pasos más cortos</p>
+                            </div>
+                        </li>
+                        <li style="margin-bottom:0">
+                            <img src="./img/li_4.png" alt="">
+                            <div>
+                                <p class="t">99%</p>
+                                <p>Tasa de éxito más alta</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <!-- <div class="bigitem">
+                <div class="item">
+                    <div class="title">¿Por qué elegirnos?</div>
+                    <ul class="thrList">
+                        <li>
+                            <div class="quer"></div>Proceso sencillo y préstamo rápido
+                        </li>
+                        <li>
+                            <div class="quer"></div>Pago flexible
+                        </li>
+                        <li>
+                            <div class="quer"></div>Solo necesita tener al menos 18 años
+                        </li>
+                        <li>
+                            <div class="quer"></div>Proceso 100% online
+                        </li>
+                        <li>
+                            <div class="quer"></div>Múltiples canales de pago: Online + OXXO
+                        </li>
+                        <li>
+                            <div class="quer"></div>Equipo senior en negocio crediticio
+                        </li>
+                        <li>
+                            <div class="quer"></div>Protección múltiple de información personal
+                        </li>
+                        <li>
+                            <div class="quer"></div>El servicio cubre todo el territorio de México
+                        </li>
+                    </ul>
+                </div>
+            </div> -->
+            <div class="bigitem">
+                <div class="item">
+                    <div class="title">Contáctenos</div>
+                    <p class="lx">Atención de cliente: <span style="color:#FF8700">5544407595</span> </p>
+                    <p class="lx" style="margin-bottom:0.46rem">Email: <span
+                            style="color: #FF8700;">servicio@superapoyo.com</span> </p>
+                </div>
+            </div>
+            <van-loading v-if="loadingImg" />
+        </div>
+        <div class="foot">
+            <div>
+                <img style="margin-right:0.4rem" src="./img/foot1.png" alt="">
+                <img @click="golink" src="./img/foot2.png" alt="">
+            </div>
+            <p>
+                Superapoyo, un súper partidario de tu vida
+            </p>
+        </div>
+    </div>
+</body>
+<!-- Facebook Pixel Code -->
+<script>
+    !function (f, b, e, v, n, t, s) {
+        if (f.fbq) return; n = f.fbq = function () {
+            n.callMethod ?
+                n.callMethod.apply(n, arguments) : n.queue.push(arguments)
+        };
+        if (!f._fbq) f._fbq = n; n.push = n; n.loaded = !0; n.version = '2.0';
+        n.queue = []; t = b.createElement(e); t.async = !0;
+        t.src = v; s = b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t, s)
+    }(window, document, 'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+    fbq('init', '2657714437857650');
+    fbq('track', 'PageView');
+</script>
+<noscript>
+    < img height="1" width="1" style="display:none"
+        src="https://www.facebook.com/tr?id=2657714437857650&ev=PageView&noscript=1" />
+</noscript>
+<!-- End Facebook Pixel Code -->
+<script>
+    new Vue({
+        el: '#app',
+        data() {
+            return {
+                urlHead: 'https://app.superapoyo.com',
+                loadingImg: false,
+                showNum: false,
+                butNum: 60,
+                num: 0,//随机数
+                mobile: '',
+                value: '',
+                checked: false,
+                codeUrl: "",
+                imgCode: '',
+                authCode: '',
+                source: '',
+            }
+        },
+        mounted() {
+
+            let temp = this.getUrlParam('source')
+            if (temp != null) {
+                temp = window.location.host + "?source=" + temp
+                this.source = temp
+            }
+            sessionStorage.setItem('source', this.source)
+            //调用打点接口
+            this.pushDot()
+            //vconsole
+            // var vConsole = new VConsole();
+        },
+        methods: {
+            golink() {
+                window.open('https://superapoyo.onelink.me/IBEC/2018e254', "_self")
+            },
+            goPrivacy() {
+                window.open('./privacy.html', "_self")
+            },
+            getUrlParam(name) {
+                //构造一个含有目标参数的正则表达式对象
+                var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+                //匹配目标参数
+                var r = window.location.search.substr(1).match(reg);
+                //返回参数
+                if (r != null) {
+                    return unescape(r[2]);
+                } else {
+                    return null;
+                }
+            },
+            pushDot() {
+                axios.get(this.urlHead + '/h5/v1/auth/active/dot', { params: { "source": this.source } })
+            },
+            getCode() {
+                if (this.mobile[0] == 1 && this.mobile.length != 11) {
+                    this.$toast("Favor de ingresar número telefónico correcto");
+                    return
+                } else if (this.mobile[0] != 1 && this.mobile.length != 10) {
+                    this.$toast("Favor de ingresar número telefónico correcto");
+                    return
+                }
+                let mobile = '+52' + this.mobile
+                this.loadingImg = true
+                if (this.codeUrl == '') {
+                    axios.get(this.urlHead + '/h5/v1/auth/active/firstlogin', { params: { mobile: mobile, source: this.source } }).then(res => {
+                        if (res.data != '' && res.data.code == 0) {
+                            if (res.data.data.status == false) {
+                                var data = { language: '', mobile: mobile, imgCode: this.imgCode, verfityImgCode: 1, source: this.source, language: '', isone: 1 }
+                                this.getSmsCode(data)
+                                return;
+                            }
+                            this.loadingImg = false
+                            this.changeImg()
+                            this.$toast("Favor de ingresar código de verificación de dibujo correcto");
+                            return
+                        }
+                    })
+                } else if (this.imgCode == '') {
+                    this.loadingImg = false
+                    this.$toast("Favor de ingresar código de verificación de dibujo correcto");
+                    return
+                } else {
+                    var data = { language: '', mobile: mobile, imgCode: this.imgCode, verfityImgCode: 1, source: this.source, language: '' }
+                    this.getSmsCode(data)
+                }
+
+            },
+            getSmsCode(data) {
+                //获取短信验证码
+                axios.post(this.urlHead + '/h5/v1/auth/active/code/get', data).then(res => {
+                    if (res.data.code == 0) {
+                        this.loadingImg = true
+                        this.showNum = true;
+                        let setTe = setInterval(() => {
+                            this.butNum--
+                            if (this.butNum == 0) {
+                                clearInterval(setTe)
+                                this.showNum = false;
+                                this.butNum = 60
+                            }
+                        }, 1000);
+                        this.loadingImg = false
+                    } else {
+                        this.$toast('Código de verificación de dibujo incorrecto')
+                        this.loadingImg = false
+                    }
+                })
+            },
+            changeImg() {
+                axios.get(this.urlHead + '/h5/v1/auth/img_code/getv1', { params: { "mobile": '+52' + this.mobile } }).then(res => {
+                    if (res.data != '') {
+                        this.codeUrl = "data:image/png;base64," + res.data
+                    }
+                })
+            },
+            login() {
+                if (this.mobile == '') {
+                    this.$toast('Favor de ingresar número telefónico')
+                    return
+                }
+                if (this.authCode == '') {
+                    this.$toast('Favor de ingresar código de verificación de mensaje')
+                    return
+                }
+                if (!this.checked) {
+                    this.$toast('Puede iniciar sesión despúes de aceptar el acuerdo')
+                    return
+                }
+                let mobile = '+52' + this.mobile
+                axios.post(this.urlHead + '/h5/v1/auth/active/login/sms', {
+                    mobile: mobile, language: '',
+                    auth_code: this.authCode,
+                    channel: '',
+                    source: this.source
+                }).then(res => {
+                    if (res.data.code == 0) {
+                        sessionStorage.setItem('token', res.data.data.access_token)
+                        if (res.data.data.status > 0) {
+                            window.open('./index4.html', "_self")
+                        } else {
+                            window.open('./index2.html', "_self")
+                        }
+                    } else if (res.data.code == 400116) {
+                        this.$toast('Código de verificación incorrecto')
+                    }
+                })
+            }
+        }
+    })
+</script>
+
+</html>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        font-size: 0.26rem;
+    }
+
+    .twoList,
+    .thrList {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+
+        padding: 0.4rem 0;
+    }
+
+    .quer {
+        height: 0.18rem;
+        width: 0.18rem;
+        background: linear-gradient(180deg, #FFE68A 0%, #F76B1C 100%);
+        border-radius: 50%;
+        margin-right: 0.16rem;
+    }
+
+    .thrList {
+        color: #333;
+        padding-top: 0;
+
+    }
+
+    .thrList li {
+        margin-bottom: 0.1rem;
+        font-size: 0.28rem;
+        display: flex;
+        align-items: center;
+    }
+
+    .twoList li {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        width: 100%;
+        justify-content: space-between;
+        margin-bottom: 0.4rem;
+    }
+
+    .twoList li img {
+        width: 0.86rem;
+        height: 0.86rem;
+        position: relative;
+        left: .4rem;
+    }
+
+    .twoList li div {
+        flex: 1;
+        font-size: 0.32rem;
+        text-align: center;
+        position: relative;
+        left: .2rem;
+    }
+
+    .twoList li .t {
+        color: #FF8700;
+        font-weight: 550;
+        font-size: .32rem;
+    }
+
+    .twoList p {
+        font-size: 0.28rem;
+
+    }
+
+    .form {
+        width: 100%;
+        text-align: center;
+    }
+
+    .title {
+        background: url('./img/title_bg.png') no-repeat;
+        font-size: 0.32rem;
+        background-size: 100% auto;
+        display: inline-block;
+        padding: 0 0.58rem;
+        padding-bottom: 0.05rem;
+        background-position: bottom center;
+        margin: 0.4rem 0;
+        font-weight: 550;
+    }
+
+    .title2 {
+        background: url('./img/title_bg2.png') no-repeat;
+        background-size: 100% auto;
+        background-position: bottom center;
+        text-align: center;
+        line-height: 0.27rem;
+    }
+
+    .foot {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 0.4rem;
+    }
+
+    .foot p {
+        font-size: 0.28rem;
+        margin-top: 0.4rem;
+        color: #fff;
+    }
+
+    .foot img {
+        height: 0.71rem;
+        width: auto;
+    }
+
+    .bigitem {
+        margin-left: 2.5vw;
+        background: #FFA63D;
+        width: 95vw;
+        margin-bottom: 0.2rem;
+        box-sizing: border-box;
+        border-radius: 0.2rem;
+        box-shadow: 0px 6px 12px 0px rgba(255, 12, 0, 0.8);
+        padding: 0.2rem;
+    }
+
+    .item {
+        border-radius: 0.2rem;
+        background: #fff;
+        padding: 0 0.48rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .content {
+        padding-top: 4.8rem;
+    }
+
+    .banner {
+        width: 100%;
+        height: auto;
+        position: absolute;
+        top: 0;
+        right: 0;
+    }
+
+    .logo {
+        position: absolute;
+        top: 0.4rem;
+        left: 0.4rem;
+        width: 2.63rem;
+    }
+
+    .app {
+        min-height: 100vh;
+        width: 100vw;
+        background: url('./img/bj.png');
+        background-size: 100%;
+        padding-bottom: 0.4rem;
+    }
+
+    .van-cell {
+        background: #f0f4ff;
+    }
+
+    .van-cell-group {
+        margin-bottom: 0.3rem;
+    }
+
+    .van-button--primary {
+        background-color: #FCE412;
+        border: none;
+        color: #000;
+        border-radius: 4px;
+    }
+
+    .sumbit {
+        width: 5.16rem;
+        height: 1rem;
+        background: url('./img/button_bg.png');
+        background-size: 100% 100%;
+        font-size: 0.32rem;
+        border: none;
+        position: relative;
+        margin-bottom: 0.32rem;
+    }
+
+    .van-checkbox {
+        margin-bottom: 0.44rem;
+        text-align: center;
+        justify-content: center;
+        color: #323233;
+    }
+
+    .lx {
+        color: #000;
+        font-size: 0.28rem;
+        margin-bottom: 0.2rem;
+    }
+
+    .lx span {
+        font-size: .28rem;
+        font-weight: 560;
+    }
+
+
+
+    .van-cell {
+        padding: 0;
+        line-height: .8rem;
+        padding-left: .2rem;
+        position: relative;
+        font-size: 10rem;
+    }
+
+    .code,
+    .btn {
+        position: absolute;
+        top: 0;
+        right: 0;
+        height: 100%;
+        width: 2rem;
+        background-color: #FCE412;
+        border: none;
+        font-size: .32rem;
+    }
+
+    .btn {
+        border-radius: 5px;
+    }
+
+    .btnbtn {
+        position: relative;
+    }
+
+    .van-button {
+        font-size: 30rem;
+    }
+
+    input {
+        font-size: .28rem !important;
+    }
+
+    .van-field {
+        margin-bottom: .2rem;
+        border-radius: 4px;
+    }
+
+    .btn:disabled {
+        background: #dddddd;
+        color: #323233;
+    }
+
+    .van-loading {
+        position: fixed;
+        top: 40vh;
+        margin: 0 auto;
+        text-align: center;
+        width: 100%;
+    }
+</style>

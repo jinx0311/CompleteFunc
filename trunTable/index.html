@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Sorteo</title>
+</head>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vant@2.12/lib/index.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6/dist/vue.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vant@2.12/lib/vant.min.js"></script>
+<script src="./axios.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/rem/1.3.4/js/rem.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/vConsole/3.9.0/vconsole.min.js"></script>
+<script type="text/javascript">
+    window.onload = function () {
+        getRem(750, 100)
+    };
+    window.onresize = function () {
+        getRem(750, 100)
+    };
+    function getRem(pwidth, prem) {
+        var html = document.getElementsByTagName("html")[0];
+        var oWidth = document.body.clientWidth || document.documentElement.clientWidth;
+        html.style.fontSize = oWidth / pwidth * prem + "px";
+    }
+</script>
+
+<body>
+    <div id="app">
+        <template>
+            <div class="toptext">
+                <van-notice-bar left-icon="volume-o" :text="scrollList" />
+            </div>
+            <img class="title" src="./assets/img/title.png" alt="">
+
+            <!-- 转盘 -->
+            <div class="container">
+                <div class="lucky-wheel">
+                    <div class="wheel-main">
+                        <div class="wheel-pointer"></div>
+                        <div class="wheel-bg" :style="rotateStyle">
+                            <div class="prize-list">
+                                <div class="prize-item" v-if="index!=2&&index!=1" v-for="(item,index) in prizeList"
+                                    :key="index" :style="item.style">
+                                    <div class="prize-pic">
+                                        <img :src="item.icon" />
+                                    </div>
+                                    <div class="prize-type" :style="{fontSize:item.name.length<4?'20px':'1.1rem'}">
+                                        {{item.name}}</div>
+                                </div>
+                                <div class="prize-item" style="top:-5px" v-if="index==2||index==1"
+                                    v-for="(item,index) in prizeList" :key="index" :style="item.style">
+                                    <div class="prize-pic">
+                                        <img :src="item.icon" />
+                                    </div>
+                                    <div class="prize-type" :style="{fontSize:item.name.length<4?'20px':'1.1rem'}">
+                                        {{item.name}}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <p class="count">Número restante de sorteo：{{count}}</p>
+                    <van-button class="prizeBtn" :disabled="colud" @click="beginRotate()">Sortear ahora
+                    </van-button>
+                    <div class="cont">
+                        <img src="./assets/img/title1.png" alt="">
+                        <div style="text-align: left;">
+                            <ul>
+                                <li v-for="item in oneCont">{{item}}</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="cont">
+                        <img src="./assets/img/title2.png" alt="">
+                        <div style="text-align: left;">
+                            <ul>
+                                <li v-for="item in twoCont">{{item}}</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="toast-mask" v-show="show"></div>
+            </div>
+            <div class="dialog" v-if="show">
+                <div class="Coupons">
+                    <p v-if="prize" class="num"><span style="font-size: 1.7rem;">$</span>
+                        <span style="font-size: 2rem;font-weight:blod">{{prize.name}}</span>
+                    </p>
+                    <div>
+
+                        <p class="couponName" v-if="couponName==4">Cupón de monto adicional</p>
+                        <p class="couponName" v-else>Cupón de reembolso</p>
+                    </div>
+                </div>
+                <p class="date">Vencimiento:{{startTime+"-"+endTime}}</p>
+                <div class="btnClass">
+                    <button class="oneBtn" v-if="count>0" @click='onceMore'>Otra vez</button>
+                    <button class="twoBtn" @click="gohome">Usarlo</button>
+                </div>
+                <img @click="show=false" class="close" src="./assets/img/close.png" alt="">
+            </div>
+            <!-- <van-dialog v-model="show" title="标题" show-cancel-button>
+                <p v-if="prize" style="margin-left:1rem">恭喜你中了{{prize.name}}块钱！</p>
+            </van-dialog> -->
+        </template>
+    </div>
+</body>
+<!-- <script src="https://cdn.bootcdn.net/ajax/libs/vConsole/3.9.0/vconsole.min.js">
+</script>
+<script>
+    // init vConsole
+    var vConsole = new VConsole();
+</script> -->
+<script>
+    const CIRCLE_ANGLE = 360
+    const prizeList = [
+        {
+            icon: "./assets/img/yhq1.png", // 奖品图片
+            name: "0", // 奖品名称
+        },
+        {
+            icon: "./assets/img/yhq2.png",
+            name: "0",
+        },
+        {
+            icon: "./assets/img/yhq1.png",
+            name: "0",
+        },
+        {
+            icon: "./assets/img/yhq2.png",
+            name: "0",
+        },
+        {
+            icon: "./assets/img/yhq1.png",
+            name: "0",
+        },
+        {
+            icon: "./assets/img/yhq2.png",
+            name: "0",
+        },
+    ]
+    const config = {
+        // 总旋转时间
+        duration: 4000,
+        // 旋转圈数
+        circle: 20,
+        // mode: 'ease-out'
+        mode: 'ease'
+    }
+
+    new Vue({
+        el: '#app',
+        data() {
+            return {
+                couponName: null,
+                startTime: '',
+                endTime: '',
+                colud: false,
+                scrollList: [],
+                token: '',
+                //api: 'http://121.36.216.176:9090/gateway/ApiService/api/v3/',
+                //api: '/api/gateway/ApiService/api/',
+                api: 'https://app.superapoyo.com/gateway/ApiService/api/v3/',
+                show: false,
+                count: 0, // 剩余抽奖次数
+                duration: 3000, // 转盘旋转时间
+                prizeList: [], // 奖品列表
+                rotateAngle: 0, // 旋转角度
+                index: 0,
+                prize: null,
+                activityId: null,//活动id
+                oneCont: [],
+                twoCont: [],
+            }
+        },
+        mounted() {
+            this.getToken();
+            axios.defaults.headers.common['access_token'] = this.token;
+            // 获取奖品列表
+            this.initPrizeList();
+        },
+        created() {
+            // 初始化一些值
+            this.angleList = []
+            // 是否正在旋转
+            this.isRotating = false
+            // 基本配置
+            this.config = config
+        },
+        computed: {
+            rotateStyle() {
+                return `
+        -webkit-transition: transform ${this.config.duration}ms ${this.config.mode};
+        transition: transform ${this.config.duration}ms ${this.config.mode};
+        -webkit-transform: rotate(${this.rotateAngle}deg);
+            transform: rotate(${this.rotateAngle}deg);`
+            },
+            toastTitle() {
+                return this.prize
+                    ? "恭喜您，获得" +
+                    this.prize.name
+                    : "未中奖";
+            },
+            toastIcon() {
+                return this.prize
+                    ? "./assets/img/congratulation.png"
+                    : "./assets/img/sorry.png";
+            }
+        },
+        methods: {
+            gohome() {
+                window.android.gotoHome()
+            },
+            getToken() {
+                this.token = window.android.getAccessToken();
+            },
+            onceMore() {
+                //再抽一次
+                this.show = false;
+                this.beginRotate()
+            },
+            initPrizeList() {
+                // 这里可以发起请求，从服务端获取奖品列表
+                // 这里使用模拟数据
+                this.prizeList = this.formatPrizeList(prizeList)
+                axios.post(this.api + 'h5/v1/activity/prize/find', {
+                    access_token: this.token
+                }).then(res => {
+                    if (res.data.code == 0) {
+                        //获取滚动消息列表
+                        this.scrollList = res.data.data.rollingDocs
+                        this.scrollList = this.scrollList.map(item => {
+                            return (item + '　　　')
+                        })
+                        this.scrollList = this.scrollList.concat(this.scrollList, this.scrollList, this.scrollList, this.scrollList, this.scrollList, this.scrollList, this.scrollList)
+
+                        //说明
+                        this.oneCont = res.data.data.activityDesc;
+                        //规则
+                        this.twoCont = res.data.data.activityRule;
+                        //获取活动id
+                        this.activityId = res.data.data.actActivityPrizes[0].activityId
+                        //获取抽奖次数
+                        this.count = res.data.data.validTimes;
+                        //获取奖品列表
+                        let list = res.data.data.actActivityPrizes;
+                        list.forEach((item, index) => {
+                            this.prizeList.forEach((newItem, newIndex) => {
+                                if (index == newIndex) {
+                                    newItem.name = item.amount
+                                    newItem.id = item.id
+                                }
+                            })
+                        })
+                    } else if (res.data.code == 400114 || res.data.code == 400113) {
+                        // window.android.loginOut();
+                    }
+                })
+
+            },
+            // 格式化奖品列表，计算每个奖品的位置
+            formatPrizeList(list) {
+                // 记录每个奖的位置
+                const angleList = []
+                const l = list.length
+                // 计算单个奖项所占的角度
+                const average = CIRCLE_ANGLE / l
+
+                const half = average / 2
+
+                // 循环计算给每个奖项添加style属性
+                list.forEach((item, i) => {
+
+                    // 每个奖项旋转的位置为 当前 i * 平均值 + 平均值 / 2
+                    const angle = -((i * average) + half)
+                    // 增加 style
+                    item.style = `-webkit-transform: rotate(${angle}deg);
+                      transform: rotate(${angle}deg);`
+
+                    // 记录每个奖项的角度范围
+                    angleList.push((i * average) + half)
+                })
+
+                this.angleList = angleList
+
+                return list
+            },
+            beginRotate() {
+                let that = this;
+                // 添加次数校验
+
+                if (this.count === 0) {
+                    this.$notify('Aún no hay oportunidad de sortear.');
+                    window.scrollTo(0, 500)
+                    return
+                }
+                that.colud = true;
+                // 开始抽奖
+                // 这里这里向服务端发起请求，得到要获得的奖
+                // 可以返回下标，也可以返回奖品 id，通过查询 奖品列表，最终得到下标
+                // 随机获取下标
+                axios.post(this.api + 'h5/v1/activity/prize', {
+                    access_token: this.token,
+                    activityId: this.activityId
+                }).then(res => {
+                    if (res.data.code == 0) {
+                        let data = res.data.data.data;
+                        this.startTime = data.validBegin;
+                        this.endTime = data.validEnd;
+                        this.couponName = data.couponType
+                        this.prizeList.forEach((item, index) => {
+                            if (item.id == data.id) {
+                                that.index = index
+                            }
+                        })
+                        // 减少剩余抽奖次数
+                        this.count--
+                        axios.post(this.api + 'h5/v1/activity/prizeTimes', {
+
+                            access_token: this.token,
+                            activityId: this.activityId
+                        }).then(res => {
+                            if (res.data.code == 400114 || res.data.code == 400113) {
+                                window.android.loginOut();
+                            }
+                        })
+
+                        // 开始旋转
+                        this.rotating()
+                    } else if (res.data.code == 400114 || res.data.code == 400113) {
+                        window.android.loginOut();
+                    }
+                })
+
+            },
+            random(max, min = 0) {
+                return parseInt(Math.random() * (max - min + 1) + min)
+            },
+            rotating() {
+                const { isRotating, angleList, config, rotateAngle, index } = this
+
+                if (isRotating) return
+
+                this.isRotating = true
+                setTimeout(() => {
+                    // 计算角度
+                    const angle =
+                        // 初始角度
+                        rotateAngle +
+                        // 多旋转的圈数
+                        config.circle * CIRCLE_ANGLE +
+                        // 奖项的角度
+                        angleList[index] -
+                        (rotateAngle % CIRCLE_ANGLE)
+                    this.rotateAngle = angle
+                    // 旋转结束后，允许再次触发
+
+                    setTimeout(() => {
+                        this.rotateOver()
+                    }, config.duration + 1000)
+                }, 0);
+            },
+            //旋转结束
+            rotateOver() {
+                this.show = true
+                this.isRotating = false
+                this.prize = prizeList[this.index]
+                this.colud = false
+            },
+        }
+    })
+</script>
+
+</html>
+<style>
+    html {
+        max-width: 100vw;
+        font-size: 16px !important;
+        min-height: 100vh;
+        background: url('./assets/img/bj.png');
+        background-size: 100% 100%;
+    }
+
+    .container {
+        width: 100%;
+        text-align: center;
+    }
+
+    .wheel-main {
+        margin: 0 auto;
+        position: relative;
+        width: 295px;
+        height: 295px;
+    }
+
+    .wheel-bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 1;
+        width: 100%;
+        height: 100%;
+        background: url("./assets/img/draw_wheel.png") no-repeat center top;
+        background-size: 100%;
+        color: #fff;
+    }
+
+    .wheel-pointer {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        z-index: 2;
+        width: 85px;
+        height: 100px;
+        background: url("./assets/img/draw_btn.png") no-repeat center top;
+        background-size: 100%;
+        transform: translate3d(-50%, -50%, 0);
+    }
+
+    .wheel-bg div {
+        text-align: center;
+    }
+
+    .prize-list {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        margin-bottom: 2rem;
+    }
+
+    .prize-list .prize-item {
+        position: absolute;
+        width: 95px;
+        height: 150px;
+        top: 0;
+        left: 50%;
+        margin-left: -47.5px;
+        transform-origin: 50% 100%;
+    }
+
+    .prize-pic img {
+        width: 4.0625rem;
+        height: 2.5rem;
+        margin-top: 2.6rem;
+    }
+
+    .prize-pic {
+        position: relative;
+    }
+
+    .prize-type {
+        position: absolute;
+        top: 49px;
+        left: 33px;
+        font-size: .8rem;
+        min-width: 45px;
+        font-size: 20px;
+    }
+
+    .title {
+        width: 90vw;
+        margin-left: 5vw;
+        margin-top: 2.12rem;
+        margin-bottom: 1rem;
+    }
+
+    .toptext {
+        font-size: .8rem;
+        font-family: PingFangSC-Semibold, PingFang SC;
+        color: rgba(255, 255, 255, 0.6);
+        line-height: 2rem;
+        width: 100vw;
+        text-align: center;
+        background: #5920CA;
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .toptext img {
+        width: 1rem;
+        height: .8rem;
+        margin-right: .5rem;
+    }
+
+    .toptext p {
+        margin: 0
+    }
+
+    .prizeBtn {
+        width: 12rem;
+        background: linear-gradient(180deg, #FFE161 0%, #FFB92C 100%);
+        box-shadow: 0px 4px 20px 0px rgba(255, 214, 83, 0.4);
+        border-radius: 40px;
+        font-weight: 550;
+        margin-top: 0rem;
+        color: #3C0D9C;
+        border-color: orchid;
+        margin-bottom: 1rem;
+        font-size: 1rem;
+    }
+
+    .count {
+        font-size: .8rem;
+        font-family: PingFang-SC-Medium, PingFang-SC;
+        font-weight: 500;
+        color: #FFFFFF;
+        line-height: 37px;
+    }
+
+    .cont {
+        margin-top: 2.6rem;
+        background: url(./assets/img/juxing.png);
+        width: 90vw;
+        font-size: .9rem;
+        margin-left: 5vw;
+        padding: 0 10px;
+        padding-top: 10px;
+        box-sizing: border-box;
+        border-radius: 8px;
+        background-size: 100% 100%;
+        color: #fff;
+    }
+
+    .cont img {
+        height: 2rem;
+        width: auto;
+        position: relative;
+        bottom: 1.7rem;
+    }
+
+    .cont div {
+        position: relative;
+        bottom: 1.2rem;
+    }
+
+    .van-swipe {
+        width: 80%;
+        text-align: left;
+    }
+
+    .van-swipe__indicators {
+        display: none;
+    }
+
+    .van-swipe-item {
+        width: 100%;
+        letter-spacing: 1px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    #app {
+        max-width: 100vw;
+        overflow: hidden;
+    }
+
+    .dialog {
+        width: 100vw;
+        height: 270px;
+        background: url('./assets/img/dialog.png');
+        background-size: 100% 100%;
+        position: fixed;
+        text-align: center;
+        top: 129px;
+        z-index: 9999;
+        display: flex;
+        justify-content: center;
+    }
+
+    .close {
+        position: absolute;
+        margin: 0 auto;
+        bottom: -3rem;
+        width: 2rem;
+    }
+
+    .Coupons {
+        position: absolute;
+        width: 61vw;
+        height: 64px;
+        top: 112px;
+        color: #F34029;
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        text-align: left;
+        flex-wrap: nowrap;
+        padding-left: .3rem;
+    }
+
+    .Coupons .num {
+        font-size: 1rem;
+        position: relative;
+        right: .5rem;
+        align-items: center;
+        display: flex;
+    }
+
+    .toast-mask {
+        width: 100vw;
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 9998;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.7);
+    }
+
+    .couponName {
+        margin: 0;
+        margin-right: 0 !important;
+        font-size: .9rem;
+        font-weight: 550;
+        flex: 1;
+        word-break: break-all;
+        width: 194px;
+        word-wrap: break-word;
+    }
+
+    .couponNum {
+        font-size: .3rem;
+        transform: scale(0.8);
+        width: 108%;
+        text-align: left;
+        position: relative;
+        right: 1.1rem;
+        margin: 0;
+    }
+
+    .btnClass {
+        position: absolute;
+        bottom: 24px;
+    }
+
+    .btnClass .oneBtn {
+        margin-right: 1rem;
+        background: linear-gradient(180deg, #FBE469 0%, #FCDB28 100%);
+        font-weight: bold;
+    }
+
+    .btnClass .twoBtn {
+        background: linear-gradient(180deg, #FFFFFE 0%, #FFF09B 100%);
+        font-weight: bold;
+    }
+
+    .btnClass button {
+        width: 90px;
+        color: #7F4E03;
+        border-radius: 35px;
+        border: none;
+        height: 35px;
+    }
+
+    .btnClass button:active {
+        filter: brightness(1.2);
+        -webkit-filter: brightness(1.2);
+    }
+
+    .date {
+        position: absolute;
+        top: 163px;
+        font-size: .8rem;
+        font-family: PingFangSC-Regular, PingFang SC;
+        font-weight: 400;
+        color: #FFFFFF;
+        line-height: 25px;
+    }
+
+    .van-notify--danger {
+        color: rgb(84, 28, 193);
+        background-color: #fff;
+    }
+
+    .van-notice-bar {
+        width: 100%;
+        color: #fff;
+        background: none;
+        padding: 0;
+    }
+
+    ul {
+        word-break: break-all;
+        color: #ddd;
+        padding: 1rem;
+    }
+
+    li {
+        margin-bottom: .5rem;
+    }
+
+    .van-notice-bar__wrap {
+        overflow: auto;
+    }
+</style>

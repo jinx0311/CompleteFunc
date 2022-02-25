@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <title>OFERTA ESPECIAL</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vant@2.12/lib/index.css" />
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6/dist/vue.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vant@2.12/lib/vant.min.js"></script>
+    <script src="./axios.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/rem/1.3.4/js/rem.min.js"></script>
+    <script>
+        window.onload = function () {
+            getRem(750, 100)
+        };
+        window.onresize = function () {
+            getRem(750, 100)
+        };
+        function getRem(pwidth, prem) {
+            var html = document.getElementsByTagName("html")[0];
+            var oWidth = document.body.clientWidth || document.documentElement.clientWidth;
+            html.style.fontSize = oWidth / pwidth * prem + "px";
+        }
+    </script>
+</head>
+
+<body>
+    <div id="app">
+        <template>
+            <div class="message">
+                <img src="./img/laba.png" alt="">
+                <van-notice-bar :text="scrollList" />
+            </div>
+            <img class="banner" src="./img/banner.png" alt="">
+            <div class="couponDiv">
+                <!-- <div class="coupon" :style="{height:status==2?'2.4rem':'1.3rem'}"> -->
+                <div class="coupon"  > 
+                    <div @click="toTwo" v-if="status==1">
+                        <img class="clubBtn" src="./img/clubBtn.png" alt="">
+                    </div>
+
+
+                    <div v-if="status==2">
+                        <p class="couponTitle">SOLO VALIDO POR HOY</p>
+                        <p class="amount">$ {{money}} <img src="./img/seal.png" alt=""></p>
+                        <img class="clubBtn usedBtn" src="./img/usedBtn.png" alt="" @click="back">
+                    </div>
+
+                    <p v-if="status==3" class="invalid">¡Lamentamos mucho, actualmente no
+                        es
+                        disponible participar en
+                        esta
+                        actividad! </p>
+                </div>
+            </div>
+            <div class="big">
+                <div class="title">
+                    <img src="./img/left.png" alt="">
+                    <p>REGLAS DE ACTIVIDAD</p>
+                    <img src="./img/right.png" alt="">
+                </div>
+                <div class="content">
+                    <div class="cont">
+                        <p>1. Fecha de actividad: Del 20 de enero de 2022 al 14 de febrero de 2022</p>
+                        <p>2. El usuario puede hacer clic en <span>"Recibir el BONUS"</span> para participar en esta
+                            actividad, y el sistema distribuirá aleatoriamente el BONUS. </p>
+                        <p>3. <span>El Bonus solo tendrá efecto cuando se liquide el pedido y no tendrá efecto para los
+                                pedidos no liquidados. El Bonus solo es válido el día de la recogida.</span></p>
+                        <p>4. El BONUS y el cupón de pago se pueden usar al mismo tiempo.</p>
+                        <p>5. El Bonus de SAN VALENTÍN se mostrará en la página de pago y el monto del pago se reducirá
+                            directamente.</p>
+                        <p>6. Reglas para utilizar el monto total de Bonus: cuando el monto de Bonus es mayor del monto
+                            que
+                            debe pagar, se utilizará la cantidad total. No hay redención ni retiro de la cantidad
+                            excedente.
+                        </p>
+                        <p>7. Superapoyo se reserva el derecho de realizar los ajustes apropiados en las reglas y la
+                            configuración de Bonus en la medida permitida por la ley, sujeto a la visualización de la
+                            página
+                            y a la no publicación de más anuncios individuales, y se considerará que cualquier
+                            participante
+                            en esta actividad acepta todas las reglas del evento y cumplirá con la Declaración Legal de
+                            Superapoyo y otras disposiciones relevantes relacionadas con las actividades de marketing.
+                        </p>
+                        <p>8. Superapoyo se reserva el derecho final de interpretación de esta actividad.</p>
+                    </div>
+                    <img class="bananer" src="./img/bananer.png" alt="">
+                </div>
+                <img class="heart" src="./img/heart.png" alt="">
+                <transition name="fade">
+                <div class="toast" v-if="toast">
+                    ¡Recibido con éxito!!
+                </div>
+                </transition>
+            </div>
+        </template>
+    </div>
+</body>
+
+</html>
+<!-- <script src="https://cdn.bootcdn.net/ajax/libs/vConsole/3.9.0/vconsole.min.js"></script>
+<script>
+    // init vConsole
+    var vConsole = new VConsole();
+</script> -->
+<script>
+    new Vue({
+        el: '#app',
+        data() {
+            return {
+                toast:false,
+                money: 0,
+                status:null,
+                apiHead: 'http://121.36.216.176:9090/gateway/ApiService/',
+               //  apiHead: 'https://app.superapoyo.com/gateway/ApiService/',
+               //  apiHead:'http://192.168.5.11:9090/gateway/ApiService/',
+                token: "294cc0fb720d76ab9f3c290cd9099a86",
+                scrollList: []
+            }
+        },
+        mounted() { 
+            this.getToken()
+            this.init() 
+        },
+        methods: {
+            getToken() {
+                this.token = window.android.getAccessToken();
+            },
+            back() {
+                window.android.gotoAndroidFragment(3);
+            },
+            toTwo() {
+                axios.post(this.apiHead + 'api/v3/h5/voucher/drawCoupon', { access_token: this.token }).then(res => {
+                    if (res.data.code == 0) {
+                        this.status = 2
+                        this.money = res.data.data.couponMoney
+                        this.toast=true
+                        setTimeout(() => {
+                            this.toast=false
+                        }, 2000);
+                    } else if (res.data.code == 1) {
+                        setTimeout(() => {
+                            window.android.gotoAndroidFragment(3);
+                        }, 3500);
+                    }else{
+                        this.$toast(res.data.message);
+                    }
+                })
+            },
+            init() {
+                let that = this;
+                axios.post(this.apiHead + 'api/v3/h5/voucher/cashCoupon', { access_token: this.token }).then(res => {
+                    if (res.data.code == 0) {
+                        let actionCode = res.data.data.actionCode
+                        if (actionCode == 0 || actionCode == 1 || actionCode == 4) {
+                            //已过期
+                            this.status = 3
+                        } else if (actionCode == 2) {
+                            //未参与
+                            that.status = 1
+
+                        } else {
+                            //已参与
+                            this.status = 2
+                            this.money = res.data.data.couponMoney
+                        }
+                        this.scrollList = res.data.data.rollingDocs
+                        this.scrollList = this.scrollList.map(item => {
+                            return (item + '　　　')
+                        })
+                        this.scrollList = this.scrollList.concat(...this.scrollList, ...this.scrollList, ...this.scrollList, ...this.scrollList)
+                    }
+                })
+            }
+        }
+    });
+</script>
+
+<style>
+    .couponTitle {
+        color: #561BE0;
+        font-size: .4rem;
+        font-weight: 550;
+        margin: 0;
+        margin-top: .2rem;
+    }
+
+    .amount {
+        color: #FF1D43;
+        justify-content: center;
+        font-weight: 550;
+        align-items: center;
+        display: flex;
+        margin: 0;
+        margin-bottom: .7rem;
+    }
+
+    .amount img {
+        width: .4rem;
+        margin-left: .2rem;
+    }
+
+    .invalid {
+        font-size: .3rem;
+        width: 80%;
+        text-align: center; 
+        color: #FF1D43;
+        font-size: .3rem;
+          margin: 0.3rem auto;
+        font-weight: 550;
+    }
+
+    .content {
+        width: 95vw;
+        margin: 0 auto;
+        min-height: 30vh;
+        background: #561BE0;
+        box-sizing: border-box;
+        position: relative;
+        padding: 0.16rem;
+    }
+
+    .content .bananer {
+        position: absolute;
+        top: 0.5rem;
+        right: -0.2rem;
+        width: 0.7rem;
+    }
+
+    .cont span {
+        color: #FF1D43;
+    }
+
+    .cont {
+        overflow: hidden;
+        width: 100%;
+        font-size: .27rem;
+        line-height: 22px;
+        box-sizing: border-box;
+        padding: 0 .2rem;
+        background: #fff;
+    }
+
+    .title {
+        display: flex;
+        color: #fff;
+        margin: 1.3rem auto;
+        width: 65vw;
+        margin-bottom: .3rem;
+        align-items: center;
+        font-size: .3rem;
+        justify-content: space-between;
+    }
+
+    .title p {
+        margin: 0 .3rem;
+    }
+
+    .title img {
+        width: .3rem;
+        height: .3rem;
+    }
+
+    .clubBtn {
+        position: relative;
+        top: -0.1rem;
+        width: 70vw;
+        z-index: 10;
+    }
+
+    .big {
+        position: relative;
+        margin-top: -2rem;
+        width: 100vw;
+        flex: 1;
+        background: url('./img/bg.png');
+        background-size: 100% 100%;
+        padding-bottom: 1rem;
+    }
+
+    .heart {
+        width: 25vw;
+        position: absolute;
+        bottom: 0;
+        right: 0;
+    }
+
+    .coupon {
+        background: url('./img/couponBg.png');
+        background-size: 100% 100%;
+        padding: .5rem 0;
+        width: 95vw;
+        padding-top: .5rem;
+        margin: 0 auto;
+        position: relative;
+        transition: all .5s linear;
+        margin-bottom: 1rem;
+    }
+
+    .couponDiv {
+        text-align: center;
+        position: relative;
+        bottom: 2px;
+        background: rgb(47, 26, 142);
+    }
+
+    #app {
+        display: flex;
+        min-height: 100vh;
+        flex-direction: column;
+        font-family: PingFangSC-Semibold, PingFang SC;
+        max-width: 100vw;
+        overflow: hidden;
+    }
+
+    body {
+        -webkit-touch-callout: none;
+        /*系统默认菜单被禁用*/
+        -webkit-user-select: none;
+        /*webkit浏览器*/
+        -khtml-user-select: none;
+        /*早起浏览器*/
+        -moz-user-select: none;
+        /*火狐浏览器*/
+        -ms-user-select: none;
+        /*IE浏览器*/
+        user-select: none;
+        /*用户是否能够选中文本*/
+    }
+
+    input,
+    select {
+        -webkit-user-select: auto;
+        /*webkit浏览器*/
+        user-select: auto;
+        /*用户是否能够选中文本*/
+    }
+
+    .van-notice-bar {
+        color: #fff;
+        background: #200096;
+        flex: 1;
+        padding: 0;
+        padding-left: 0.1rem;
+    }
+
+    .banner {
+        width: 100vw;
+        position: relative;
+        bottom: 1px;
+    }
+
+    .invalid {
+        font-size: .3rem;
+    }
+
+    .usedBtn {
+        position: absolute;
+        top: inherit;
+        left: 15%;
+        width: 70%;
+        bottom: -.06rem;
+        z-index: 10;
+        transition: 1s all linear;
+    }
+
+    .message {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        padding-left: 0.1rem;
+        background: #200096;
+    }
+
+    .message img {
+        width: 0.3rem;
+    }
+    .van-notice-bar__wrap{
+        line-height: 100%;
+    }
+    .toast{
+    position: fixed;
+    z-index: 9999;
+    background: rgba(0, 0, 0, 0.5);
+    top: 30vh;
+    color: #fff;
+    font-size: 0.35rem;
+    width: 90vw;
+    text-align: center;
+    left: 5vw;
+    padding: 10px 0;
+    }
+    .fade-enter-active, .fade-leave-active {
+  transition: opacity .5s;
+}
+.fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+  opacity: 0;
+}
+</style>

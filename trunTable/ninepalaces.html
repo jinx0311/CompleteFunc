@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Sorteo</title>
+</head>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vant@2.12/lib/index.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6/dist/vue.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vant@2.12/lib/vant.min.js"></script>
+<script src="./axios.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/rem/1.3.4/js/rem.js"></script>
+<script type="text/javascript">
+    window.onload = function () {
+        getRem(750, 100)
+    };
+    window.onresize = function () {
+        getRem(750, 100)
+    };
+    function getRem(pwidth, prem) {
+        var html = document.getElementsByTagName("html")[0];
+        var oWidth = document.body.clientWidth || document.documentElement.clientWidth;
+        html.style.fontSize = oWidth / pwidth * prem + "px";
+    }
+</script>
+
+<body>
+    <div id="app">
+        <template>
+            <div class="turnTable">
+                <ul class="prizeList">
+                    <li v-for='(item,index) in prizeList' :class="index==activeIndex?'active':''"
+                        @click="toPrize(index)">
+                        {{item}}
+                    </li>
+                </ul>
+            </div>
+        </template>
+    </div>
+</body>
+
+<script>
+    new Vue({
+        el: '#app',
+        data() {
+            return {
+                activeIndex: null,
+                startPrize: false,
+                prizeList: ['1块钱', '2块钱', '3块钱', '4块钱', '5块钱', '6块钱', '7块钱', '8块钱']
+            }
+        },
+        mounted() {
+            if (this.prizeList.length > 0) {
+                let prize = this.prizeList;
+                prize.splice(4, 0, '点击抽奖')
+                this.prizeList = prize
+            }
+        },
+        methods: {
+            toPrize(index) {
+                this.activeIndex = 0
+                let time = 100;
+                let interval = setInterval(() => {
+                    // if (this.activeIndex == 2) {
+                    //     this.activeIndex = 5
+                    // } else if (this.activeIndex == 5) {
+                    //     this.activeIndex = 8
+                    // } else if (this.activeIndex == 8) {
+                    //     this.activeIndex = 7
+                    // } else if (this.activeIndex == 7) {
+                    //     this.activeIndex = 6
+                    // }
+                    // else if (this.activeIndex == 6) {
+                    //     this.activeIndex = 3
+                    // } else if (this.activeIndex == 3) {
+                    //     this.activeIndex = 0
+                    // } else {
+                    //     this.activeIndex++
+                    // }
+                    time = time - 20
+                    if (time == 0) {
+                        clearInterval(interval)
+                        // if (this.activeIndex < 3) {
+                        //     this.activeIndex = this.activeIndex - 1
+                        // }
+                        console.log(this.activeIndex);
+                        alert('恭喜您中了' + this.prizeList[this.activeIndex])
+                        this.activeIndex = null
+                    }
+                }, time)
+            }
+        }
+    })
+</script>
+<!-- <script src="https://cdn.bootcdn.net/ajax/libs/vConsole/3.9.0/vconsole.min.js">
+</script>
+<script>
+    // init vConsole
+    var vConsole = new VConsole();
+</script> -->
+
+</html>
+<style>
+    .prizeList {
+        width: 95vw;
+        margin-left: 2.5vw;
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        margin-top: 20px;
+        position: relative;
+    }
+
+    .prizeList li {
+        display: inline-block;
+        width: 32%;
+        display: flex;
+        align-items: center;
+        margin-bottom: 3px;
+        justify-content: center;
+        height: 32vw;
+        border: 1px solid #ddd;
+    }
+
+    ul {
+        list-style: none;
+        font-size: .5rem;
+
+    }
+
+    .active {
+        background: rgba(255, 255, 0, 0.6);
+    }
+</style>

@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Superapoyo</title>
+</head>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vant@2.12/lib/index.css" />
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6/dist/vue.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vant@2.12/lib/vant.min.js"></script>
+<script src="./axios.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/rem/1.3.4/js/rem.js"></script>
+<script type="text/javascript">
+    window.onload = function () {
+        getRem(750, 100)
+    };
+    window.onresize = function () {
+        getRem(750, 100)
+    };
+    function getRem(pwidth, prem) {
+        var html = document.getElementsByTagName("html")[0];
+        var oWidth = document.body.clientWidth || document.documentElement.clientWidth;
+        html.style.fontSize = oWidth / pwidth * prem + "px";
+    }
+</script>
+
+<body>
+    <div class="app" id="app">
+        <div v-if="showList" class="bigList">
+            <div class="listHead">
+                <div>
+                    <van-icon @click="back" name="arrow-left" />
+                </div>
+                <p>Lista de tarjetas bancarias</p>
+            </div>
+            <van-field @input="searchList" v-model="searchBank" clearable placeholder="search Bank" class="searchBank">
+            </van-field>
+            <ul class="bankList">
+                <li :class="item.bank_id==changeBank.bank_id?'changeBank':''" @click="changBanks(item)"
+                    v-for="item in bankListIng" :key="item.bank_id">
+                    {{item.bank_name}}
+                </li>
+            </ul>
+            <div class="changeBtn">
+                <van-button @click="back">Confirmar</van-button>
+            </div>
+        </div>
+        <div v-if="!showList">
+            <img src="./img/banner.png" class="banner" alt="">
+            <img src="./img/logo.png" class="logo" alt="">
+            <div class="content">
+                <div class="bigitem">
+                    <div class="item">
+                        <div class="title newBg">La información real le ayuda <br> obtener un préstamo sin intereses
+                        </div>
+                        <div class="select">
+                            <select :style="{color:form.monthly_income==null?'#cccccc':'#000000'}" class="" name=""
+                                v-model="form.monthly_income">
+                                <option :value="null" selected style="display:none">Nivel de su ingreso</option>
+                                <option :value="1">0~3,000 MXN</option>
+                                <option :value="2">3,000~6,000 MXN</option>
+                                <option :value="3">6,000~9,000 MXN</option>
+                                <option :value="4">9,000~12,000 MXN</option>
+                                <option :value="5">12,000~15,000 MXN</option>
+                                <option :value="6">15,000+ MXN</option>
+                            </select>
+                            <i class="select-icon-down"></i>
+                            <i class="select-icon-up"></i>
+                        </div>
+                        <!-- 发薪频率 -->
+                        <div class="select">
+                            <select :style="{color:form.salary_type==null?'#cccccc':'#000000'}" class="" name=""
+                                @change='clearDate' v-model="form.salary_type">
+                                <option :value="null" selected style="display:none">Frecuencia de recibir el ingreso
+                                </option>
+                                <option :value="1">Quincenal</option>
+                                <option :value="2">Mensual</option>
+                                <option :value="3">Semanal</option>
+                                <option :value="4">Catorcenal</option>
+                            </select>
+                            <i class="select-icon-down"></i>
+                            <i class="select-icon-up"></i>
+                        </div>
+                        <div class="calendar" v-if="form.salary_type==1||form.salary_type==2"
+                            :style="{color:changeDate1=='Elija 1er día de pago'?'#cccccc':'#000000'}"
+                            @click="toolbar=true;toolType=1">
+                            <p>{{changeDate1}}</p>
+                            <img src="./img/rili.png" alt="">
+                        </div>
+                        <div class="calendar" v-if="form.salary_type==1"
+                            :style="{color:changeDate2=='Elija 2ndo día de pago'?'#cccccc':'#000000'}"
+                            @click="toolbar=true;toolType=2">
+                            <p>{{changeDate2}}</p>
+                            <img src="./img/rili.png" alt="">
+                        </div>
+                        <div v-if="form.salary_type==3||form.salary_type==4" class="calendar"
+                            :style="{color:changeWeek=='选择星期'?'#cccccc':'#000000'}" @click="weekbar=true">
+                            <p>{{changeWeek}}</p>
+                            <img src="./img/rili.png" alt="">
+                        </div>
+
+                        <p class="bt">Información bancaria(Para obtener préstamo)</p>
+
+                        <div class="select">
+                            <select :style="{color:form.transfer_type==null?'#cccccc':'#000000'}" class="" name=""
+                                v-model="form.transfer_type" @change="defaltBank">
+                                <option :value=null selected style="display:none">Elija el tipo de cuenta</option>
+                                <option :value="1">CLABE</option>
+                                <option :value="2">Tarjeta de débito</option>
+                                <option :value="3">Spin Clabe</option>
+                            </select>
+                            <i class="select-icon-down"></i>
+                            <i class="select-icon-up"></i>
+                        </div>
+                        <!-- 打开银行列表 -->
+                        <div class="calendar" :style="bankClass"
+                            :style="{color:changeDate2=='Elija 2ndo día de pago'?'#cccccc':'#000000'}"
+                            v-if="form.transfer_type!=3" @click="showList=true">
+                            <p>{{changeBank.bank_name}}</p>
+                            <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAd5JREFUeF7tmN9GRFEUxn/zJt32AN33EpWSRJJEkiSS/ogkqUiSSBKpl+gmeoTuepUsZtjGyMxee+09217n6hjWt9b329+a45wOjV+dxv3jADwBjRPwFWg8AP4n6CvgK9A4AV+BxgPgTwFfAV+Bxgn4CjQeAH8K+ApErMAMcA18AbMR9VYl78AUMA98D9skJgG/wES3wceYQBDzcjBy/QCTlgDCZtKnNIT+eY6BI0sAov0GzAVNSkFQmZf5Y1ag5/sVWCgIQW1eC0DqX4DFAhCSmE8BQDSegaWMEJKZTwVAdJ6A5QwQkppPCUC0HoEVQwjJzacGIHoPwKoBBBPzFgBE8x5YSwjBzLwVANG9A9YTQDA1bwlAtG+BDQUEc/PWAET/BtiMgJDFfA4A0uMK2BoBQjbzuQBIn0tgewgIWc3nBCC9LoCdfyBkN58bgPQ7B3YHQChivgQA6XkG7PVB6H3MkJ9Hep8PdKJuNa/DUQ27RafA/gCBrOZLJaDn+wQ4CCBkN18agPSXT1eHuWMfJq/UCoQzTAOfmn3S1I4DAM386loHoEZYuYAnoPIDVI/vCVAjrFzAE1D5AarH9wSoEVYu4Amo/ADV43sC1AgrF/AEVH6A6vE9AWqElQs0n4A/1FJSQcDlClwAAAAASUVORK5CYII="
+                                alt="">
+                        </div>
+                        <p class="calendar" style="color:#000;font-size:0.3rem" v-if="form.transfer_type==3">stp</p>
+                        <van-field v-model="form.bank_no" maxlength="18" clearable :placeholder='bankTitle'>
+                        </van-field>
+                        <button :disabled='isDis' class="sumbit" @click="sumbit">Subir</button>
+                    </div>
+                </div>
+                <div class="bigitem">
+                    <div class="item">
+                        <ul class="list">
+                            <li>
+                                <img src="./img/2_li1.png" alt="">
+                                <p>Solicitar <br> ahora</p>
+                            </li>
+
+                            <li>
+                                <img src="./img/2_li2.png" alt="">
+                                <p>Confirmar <br> monto</p>
+                            </li>
+                            <li>
+                                <img src="./img/2_li3.png" alt="">
+                                <p>Llegar al <br> instante</p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="bigitem">
+                    <div class="item">
+                        <div class="title">Contáctenos</div>
+                        <p class="lx">Atención de cliente: <span style="color:#FF8700">5561128778</span> </p>
+                        <p class="lx" style="margin-bottom:0.46rem">Email: <span
+                                style="color: #FF8700;">atencion@superapoyo.com</span> </p>
+                    </div>
+                </div>
+            </div>
+            <div class="foot">
+                <div>
+                    <img src="./img/foot1.png" alt="">
+                    <img @click="golink" src="./img/foot2.png" alt="">
+                </div>
+                <p>
+                    Superapoyo, el súper partidario de tu vida
+                </p>
+            </div>
+            <van-picker title="选择日期" show-toolbar v-if='toolbar' :columns="columns" @confirm="onConfirm"
+                @cancel="onCancel('mounth')">
+            </van-picker>
+
+            <van-picker title="选择日期" show-toolbar v-if='weekbar' :columns="weekcolumns" @confirm="weekConfirm"
+                @cancel="weekCancel"></van-picker>
+        </div>
+        <div class="mask" v-if="weekbar||toolbar"></div>
+    </div>
+</body>
+<script>
+    new Vue({
+        el: '#app',
+        data() {
+            return {
+                bankTitle: 'Número de CLABE de 18 dígitos',
+                isDis: false,
+                urlHead: 'https://app.superapoyo.com',
+                token: '',
+                bankClass: {},
+                changeBank: {
+                    bank_name: 'Nombre de banco'
+                },//选择的银行id
+                bankList: [],
+                source: '',
+                bankListIng: [],
+                searchBank: '',//搜索银行的关键词
+                showList: false,
+                form: {
+                    monthly_income: null,
+                    salary_type: null,
+                    transfer_type: null,
+                    pay_date1: 0,
+                    pay_date2: 0,
+                },
+                toolType: 0,//日历是第几个，
+                weekbar: false,
+                weekcolumns: ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'],
+                changeDate1: 'Elija 1er día de pago',
+                changeDate2: 'Elija 2ndo día de pago',
+                changeWeek: 'Elija el día de paga',
+                columns: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31],
+                toolbar: false,
+                date: '',
+                value1: 100,
+                value2: '',
+                value4: '',
+                value6: "",
+                option1: [
+                    { text: '全部商品', value: 0 },
+                    { text: '新款商品', value: 1 },
+                    { text: '活动商品', value: 2 },
+                ],
+            }
+        },
+        mounted() {
+
+            this.token = sessionStorage.getItem('token')
+            this.source = sessionStorage.getItem('source')
+            axios.post(this.urlHead + '/h5/v1/auth/active/account/isinfo', { token: this.token }).then(res => {
+                if (res.data.code == 0) {
+                    if (res.data.data.status == 2) {
+                        this.isDis = false
+                    } else {
+                        this.isDis = true
+                    }
+                }
+            })
+            this.getBankList()
+
+        },
+        watch: {
+            changeBank(val) {
+
+            }
+        },
+        methods: {
+            clearDate() {
+                this.form.pay_date1 = 0
+                this.form.pay_date2 = 0
+                this.changeDate1 = 'Elija 1er día de pago'
+                this.changeDate2 = 'Elija 2ndo día de pago'
+                this.changeWeek = 'Elija el día de paga'
+            },
+            golink() {
+                window.open('https://superapoyo.onelink.me/IBEC/2018e254', "_self")
+            },
+            defaltBank() {
+
+                if (this.form.transfer_type == 3) {
+                    this.changeBank.bank_name = 'STP'
+                    console.log(this.changeBank.bank_name);
+                } else {
+                    this.changeBank.bank_name = ''
+                }
+                if (this.form.transfer_type == 2) {
+                    this.bankTitle = '16 dígitos de tarjeta de débito'
+                } else {
+                    this.bankTitle = 'Número de CLABE de 18 dígitos'
+                }
+            },
+            searchList() {
+                let text = this.searchBank.toUpperCase() //关键词
+                let arr = this.bankList;//原数组
+                let newArr = arr.filter(item => {
+                    return item.bank_name.indexOf(text) > -1
+                })
+                this.bankListIng = newArr
+            },
+            changBanks(row) {
+                this.changeBank = row
+                this.bankClass = { color: '#000' }
+            },
+            //最终提交
+            sumbit() {
+                let that = this;
+                this.form.token = this.token
+                this.form.bank_name = this.changeBank.bank_name
+                if (this.form.pay_date1 == 0 || this.form.pay_date1 == undefined) {
+                    this.$toast('Favor de elegir fecha de salario completa')
+                    return
+                }
+                if (this.form.salary_type == 1) {
+                    if (this.form.pay_date2 == 0 || this.form.pay_date2 == undefined) {
+                        this.$toast('Favor de elegir fecha de salario completa')
+                        return
+                    }
+                }
+                if (this.form.monthly_income == null) {
+                    that.$toast('Seleccione ingresos mensuales')
+                    return
+                } else if (this.form.salary_type == null) {
+                    that.$toast('Seleccione el tipo del día de pago')
+                    return
+                }
+
+                if (this.form.transfer_type == 3) {
+                    this.form.transfer_type = 1
+                }
+                if (this.form.transfer_type == 1 && this.form.bank_no.length < 18) {
+                    that.$toast('Ingrese el número CLABE correcto de 18 dígitos.')
+                    return
+                }
+                if (this.form.transfer_type == 2 && this.form.bank_no.length != 16) {
+                    that.$toast('Ingrese el número de cuenta bancaria correcto de 16 dígitos.')
+                    return
+                }
+                //this.form.bank_no
+                let twoInfo = JSON.parse(sessionStorage.twoInfo)
+                this.form = { ...this.form, ...twoInfo, 'source': this.source }
+                console.log(this.form);
+                axios.post(this.urlHead + '/h5/v1/auth/active/account/userinfo', this.form).then(res => {
+                    if (res.data.code == 0) {
+                        window.open('./index5.html', "_self")
+                    }
+                })
+
+            },
+            back() {
+                this.showList = false
+            },
+            weekConfirm(value, index) {
+                this.form.pay_date1 = ++index
+                this.changeWeek = value;
+                this.weekbar = false
+            },
+            weekCancel() {
+                this.weekbar = false
+            },
+            getBankList() {
+                axios.post(this.urlHead + '/h5/v1/auth/active/bank/list', { bank_type: 1, language: '', token: this.token }).then(res => {
+                    if (res.data.code == 0) {
+                        let data = res.data.data
+                        data.forEach((item, index) => {
+                            if (item.bank_name == 'BBVA BANCOMER') {
+                                data.unshift(data.splice(index, 1)[0])
+                            } else if (item.bank_name == 'STP') {
+                                data.unshift(data.splice(index, 1)[0])
+                            }
+                        })
+                        console.log(data);
+                        this.bankList = data
+                        this.bankListIng = data
+                    }
+                })
+            },
+            onConfirm(value) {
+                if (this.toolType == 1) {
+                    this.changeDate1 = value
+                    this.form.pay_date1 = value;
+
+                } else {
+                    this.changeDate2 = value
+                    this.form.pay_date2 = value
+                }
+                this.toolbar = false;
+            },
+            onCancel() {
+                this.toolbar = false;
+            },
+        }
+    })
+</script>
+
+</html>
+<style>
+    .searchBank {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin: .1rem auto;
+    }
+
+    .bankList {
+        font-size: .28rem;
+        color: #666;
+        line-height: .8rem;
+        margin-bottom: .2rem;
+        padding-bottom: 1.8rem;
+        background: #fff;
+    }
+
+    .bankList li {
+        border-bottom: 1px solid #b2b2b2;
+        padding-left: .1rem;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+    }
+
+    .title {
+        background: url('./img/title_bg.png') no-repeat;
+        font-size: 0.3rem;
+        background-size: 100% auto;
+        display: inline-block;
+        padding: 0 0.4rem;
+        padding-bottom: 0.05rem;
+        background-position: bottom center;
+        margin: 0.4rem 0;
+        text-align: center;
+        font-weight: 550;
+    }
+
+    .newBg {
+        background: url('./img/title_bg2.png') no-repeat;
+        background-size: 100% auto;
+        background-position: bottom center;
+    }
+
+    .foot {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 0.4rem;
+    }
+
+    .foot p {
+        font-size: 0.28rem;
+        color: #fff;
+    }
+
+    .foot img {
+        height: 0.71rem;
+        width: auto;
+    }
+
+    .bigitem {
+        margin-left: 2.5vw;
+        background: #FFA63D;
+        width: 95vw;
+        box-sizing: border-box;
+        border-radius: 0.2rem;
+        box-shadow: 0px 6px 12px 0px rgba(255, 12, 0, 0.8);
+        padding: 0.2rem;
+        margin-bottom: 0.2rem;
+    }
+
+    .item {
+        border-radius: 0.2rem;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 0 0.48rem;
+    }
+
+    .content {
+        padding-top: 3.8rem;
+    }
+
+    .banner {
+        width: 90%;
+        height: auto;
+        position: absolute;
+        top: 0;
+        right: 0;
+    }
+
+    .logo {
+        position: absolute;
+        top: 0.4rem;
+        left: 0.4rem;
+        width: 2.63rem;
+    }
+
+    .app {
+        min-height: 100vh;
+        width: 100vw;
+        background: url('./img/bj.png');
+        background-size: 100%;
+        padding-bottom: .75rem;
+    }
+
+    .lx {
+        color: #000;
+        font-size: 0.28rem;
+        margin-bottom: 0.2rem;
+    }
+
+    .lx span {
+        font-size: .28rem;
+        font-weight: 560;
+    }
+
+    .list {
+        font-size: 0.28rem;
+        display: flex;
+        text-align: center;
+        width: 100%;
+        justify-content: space-between;
+        padding: .6rem 0;
+    }
+
+    .list img {
+        width: 0.8rem;
+        height: 0.75rem;
+        margin-bottom: .25rem;
+    }
+
+    .van-dropdown-menu {
+        width: 100%;
+    }
+
+
+    .item .van-cell {
+        border: none;
+        width: 100%;
+        height: 0.8rem;
+        background-color: #fff;
+        box-shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.1);
+        margin-bottom: .26rem;
+        padding: 0 .24rem;
+        line-height: 0.8rem;
+    }
+
+    option {
+        border: none;
+        background-color: #fff;
+    }
+
+    .bt {
+        text-align: left;
+        font-size: 0.28rem;
+        width: 100%;
+        margin-bottom: .16rem;
+    }
+
+    .sumbit {
+        width: 5.16rem;
+        height: 1rem;
+        background: url('./img/button_bg.png');
+        background-size: 100% 100%;
+        font-size: 0.32rem;
+        border: none;
+        position: relative;
+        margin-bottom: 0.32rem;
+    }
+
+    .calendar {
+        width: 100%;
+        height: .8rem;
+        border: none;
+        box-shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.1);
+        border-radius: 5px;
+        opacity: 0.99;
+        font-size: 0.26rem;
+        line-height: .8rem;
+        color: #ccc;
+        padding: 0 .2rem;
+        box-sizing: border-box;
+        margin-bottom: .2rem;
+        display: flex;
+        align-items: center;
+        text-align: right;
+        justify-content: space-between;
+    }
+
+    .calendar img {
+        width: .4rem;
+        height: .4rem;
+    }
+
+    .select {
+        display: inline-block;
+        position: relative;
+        box-sizing: border-box;
+        margin-bottom: .2rem;
+        width: 100%;
+        background-color: #ffffff;
+        border: none;
+        position: relative;
+        height: .8rem;
+        overflow: hidden;
+        font-size: .28rem;
+        box-shadow: 0px 4px 10px 0px rgba(0, 0, 0, 0.1);
+
+    }
+
+    select {
+        background-color: #fff;
+        width: 110%;
+        height: .8rem;
+        line-height: .8rem;
+        padding-left: .16rem;
+        border: none;
+        padding-right: .16rem;
+        font-size: .28rem;
+        appearance: none;
+        z-index: 1;
+        outline: none;
+        position: absolute;
+        top: 0;
+        border: none;
+    }
+
+    select::after {
+        content: "";
+        width: 16px;
+        height: 16px;
+        position: absolute;
+        top: 50%;
+        right: 16px;
+        z-index: 2;
+        transform: translateY(-50%);
+        transform-origin: center;
+    }
+
+    select:focus~.select-icon-down {
+        transform: translateY(-50%) rotate(180deg);
+    }
+
+    .select img {
+        width: 16px;
+        height: 16px;
+        position: absolute;
+        top: 50%;
+        right: 16px;
+        z-index: 2;
+        transform: translateY(-50%);
+        transform-origin: center;
+    }
+
+    .select>.select-icon-down {
+        background: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAd5JREFUeF7tmN9GRFEUxn/zJt32AN33EpWSRJJEkiSS/ogkqUiSSBKpl+gmeoTuepUsZtjGyMxee+09217n6hjWt9b329+a45wOjV+dxv3jADwBjRPwFWg8AP4n6CvgK9A4AV+BxgPgTwFfAV+Bxgn4CjQeAH8K+ApErMAMcA18AbMR9VYl78AUMA98D9skJgG/wES3wceYQBDzcjBy/QCTlgDCZtKnNIT+eY6BI0sAov0GzAVNSkFQmZf5Y1ag5/sVWCgIQW1eC0DqX4DFAhCSmE8BQDSegaWMEJKZTwVAdJ6A5QwQkppPCUC0HoEVQwjJzacGIHoPwKoBBBPzFgBE8x5YSwjBzLwVANG9A9YTQDA1bwlAtG+BDQUEc/PWAET/BtiMgJDFfA4A0uMK2BoBQjbzuQBIn0tgewgIWc3nBCC9LoCdfyBkN58bgPQ7B3YHQChivgQA6XkG7PVB6H3MkJ9Hep8PdKJuNa/DUQ27RafA/gCBrOZLJaDn+wQ4CCBkN18agPSXT1eHuWMfJq/UCoQzTAOfmn3S1I4DAM386loHoEZYuYAnoPIDVI/vCVAjrFzAE1D5AarH9wSoEVYu4Amo/ADV43sC1AgrF/AEVH6A6vE9AWqElQs0n4A/1FJSQcDlClwAAAAASUVORK5CYII=) no-repeat;
+        background-size: 100% 100%;
+        width: 16px;
+        height: 16px;
+        position: absolute;
+        top: 50%;
+        right: 16px;
+        z-index: 2;
+        transform: translateY(-50%);
+        transform-origin: center;
+    }
+
+    option {
+        background: #ffffff;
+    }
+
+    .van-picker {
+        position: fixed;
+        background-color: #fff;
+        -webkit-user-select: none;
+        user-select: none;
+        bottom: 0;
+        width: 100%;
+        z-index: 9999;
+    }
+
+    .bigList {
+        width: 100vw;
+        box-sizing: border-box;
+        min-height: 100vh;
+        padding: 0 5vw;
+        background-color: #fff;
+
+    }
+
+    .listHead {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        font-size: .36rem;
+        padding: .23rem .32rem;
+    }
+
+    .listHead p {
+        margin-left: .77rem;
+    }
+
+    .changeBank {
+        color: #ffffff;
+        background-color: #20AB61
+    }
+
+    .changeBtn {
+        position: fixed;
+        bottom: 0;
+        height: 2.36rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100vw;
+        left: 0;
+        background-color: #fff;
+    }
+
+    .changeBtn .van-button {
+        background: #20AB61;
+        width: 5.56rem;
+        height: .8rem;
+        color: #fff;
+        border-radius: 20px;
+    }
+
+    button:disabled {
+        background: #bbb;
+    }
+
+    .mask {
+        width: 100vw;
+        height: 100vh;
+        background: rgba(200, 200, 200, 0.5);
+        position: fixed;
+        left: 0;
+        top: 0;
+        z-index: 99;
+    }
+</style>

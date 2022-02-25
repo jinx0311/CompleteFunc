@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+    <title>Detalles</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/rem/1.3.4/js/rem.min.js"></script>
+    <script>
+        window.onload = function () {
+            getRem(750, 100)
+        };
+        window.onresize = function () {
+            getRem(750, 100)
+        };
+        function getRem(pwidth, prem) {
+            var html = document.getElementsByTagName("html")[0];
+            var oWidth = document.body.clientWidth || document.documentElement.clientWidth;
+            html.style.fontSize = oWidth / pwidth * prem + "px";
+        }
+    </script>
+</head>
+
+<body>
+    <div id="app">
+        <h5>Publicación de pago - Tips antifraude</h5>
+        <p>
+            Queridos clientes: para evitar que su dinero sea robado por estafadores, asegúrese de usar la referencia de
+            pago de la App al pagar. Revise el resto por pagar antes de pagarlo. No crea cualquier persona que le dé
+            captura de pantalla de referencia de pago, una vez lo encuentra, puede ponerse en contacto con nosotros para
+            denunciar, Rapidayuda haremos todo lo posible para brindarle buen servicio, gracias.
+        </p>
+    </div>
+</body>
+
+</html>
+
+<style>
+    #app {
+        width: 95%;
+        margin-left: 2.5%;
+    }
+
+    h5 {
+        font-size: .35rem;
+        margin: 10px 0;
+        margin-top: 20px;
+    }
+
+    p {
+        margin: 0;
+        font-size: .3rem;
+    }
+
+    span {
+        font-weight: 550;
+        color: #FF8700;
+    }
+
+    body {
+        -webkit-touch-callout: none;
+        /*系统默认菜单被禁用*/
+        -webkit-user-select: none;
+        /*webkit浏览器*/
+        -khtml-user-select: none;
+        /*早起浏览器*/
+        -moz-user-select: none;
+        /*火狐浏览器*/
+        -ms-user-select: none;
+        /*IE浏览器*/
+        user-select: none;
+        /*用户是否能够选中文本*/
+    }
+
+    input,
+    select {
+        -webkit-user-select: auto;
+        /*webkit浏览器*/
+        user-select: auto;
+        /*用户是否能够选中文本*/
+    }
+</style>

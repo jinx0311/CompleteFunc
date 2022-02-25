@@ -1,0 +1,132 @@
+.ayuda {
+  .content {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+  }
+  .el-collapse{
+    border-top: none;
+  }
+  .banner {
+    width: 100%;
+    height: 602px;
+    background: url(../../assets/img/5_banner.png) top center no-repeat;
+    background-size: cover;
+    position: absolute;
+    top: 88px;
+  }
+  .question_content {
+    position: relative;
+    width: 1100px;
+    margin-top: 164px;
+    min-height: 200px;
+    background-color: #fff;
+    box-shadow: 0px 2px 24px 0px rgba(0, 0, 0, 0.07);
+    border-radius: 13px;
+    margin-bottom: 25px;
+    padding: 70px 50px;
+    .quesionItem {
+      margin-bottom: 45px;
+      &:last-of-type {
+        margin-bottom: 0;
+      }
+      .pro {
+        font-size: 20px;
+        color: #333;
+        font-weight: 700;
+        margin-top: 35px;
+        &:first-of-type {
+          margin-top: 0;
+          font-size: 24px;
+        }
+      }
+      .answer {
+        margin-top: 10px;
+        font-size: 20px;
+        color: #333;
+        line-height: 33px;
+      }
+    }
+  }
+}
+.ayuda {
+  min-height: 100vh;
+  flex-direction: column;
+  display: flex; 
+}
+
+.answer span {
+  font-weight: 700;
+}
+
+
+.is-active button {
+  // box-shadow: 5px 6px 15px 0px rgba(11, 146, 36, 0.37);
+  background: linear-gradient(90deg, #f99716 0%, #ffd200 100%);
+  color: #fff;
+}
+ul {
+  list-style: none;
+}
+.btnList {
+  display: flex;
+  width: 268px;
+  flex-direction: column;
+  justify-content: space-between;
+  margin-top: 44px;
+  padding-bottom: 15px;
+}
+.collapseDiv {
+  background: #f8f8f8;
+  width: 100%;
+  padding: 0 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 18px;
+  border-radius: 4px;
+}
+/deep/ .el-collapse-item__arrow {
+  display: none;
+}
+/deep/ .el-collapse-item__header {
+  border-bottom: none;
+}
+.el-collapse-item {
+  margin-bottom: 18px;
+}
+.el-collapse {
+  border-top: none;
+}
+.collapseCont {
+  background: #f8f8f8;
+  padding: 20px 33px;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  border-top: 1px solid #edecec;
+  padding-top: 20px;
+}
+.activeTitle {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.slide-fade-enter-active {
+  transition: all 1s ease;
+}
+.slide-fade-leave-active {
+  transition: all 1s cubic-bezier(1, 0.5, 0.8, 1);
+}
+.slide-fade-enter, .slide-fade-leave-to
+/* .slide-fade-leave-active for below version 2.1.8 */ {
+  transform: translateX(10px);
+  opacity: 0;
+}
+.el-collapse {
+  margin-bottom: 61px;
+}
+.ayda .line {
+  width: 1px;
+  height: 477px;
+  margin-right: 43px;
+  background: #ccc;
+}
