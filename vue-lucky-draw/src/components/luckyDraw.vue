@@ -356,9 +356,7 @@ export default {
       dialogType: null, //1是图片2是优惠券
       prizeImg:
         "https://mxg-storage.obs.na-mexico-1.myhuaweicloud.com/Banner/f84a230478aa2d3ede72c47389e7968.png",
-      apiHead: "http://121.36.216.176:9090/gateway/ApiService/",
-      //apiHead:'http://192.168.5.3:9090/gateway/ApiService/',
-      //apiHead:'https://app.superapoyo.com/gateway/ApiService/',
+      apiHead: " ", 
       token: "ba76e35226bc4e34419b56ee2c1d64a5",
       animate: false,
       initSpeed: 200, // 初始速度

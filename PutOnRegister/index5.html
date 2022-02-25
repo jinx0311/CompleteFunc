@@ -64,7 +64,7 @@
         el: '#app',
         data() {
             return {
-                urlHead: 'https://app.superapoyo.com',
+                urlHead: '',
                 date: '',
                 calendar: false,
                 value1: 100,
@@ -86,7 +86,7 @@
         },
         methods: {
             golink() {
-                window.open('https://superapoyo.onelink.me/IBEC/2018e254', "_self")
+                window.open(' ', "_self")
             },
             formatDate(date) {
                 return `${date.getMonth() + 1}/${date.getDate()}`;
@@ -106,7 +106,7 @@
                 try {
                     window.location = 'superapoyo://calendar:8080/splash'; //schema链接或者universal link
                     window.setTimeout(function () {
-                        window.location = "https://superapoyo.onelink.me/IBEC/2018e254"; //android下载地址  
+                        window.location = ""; //android下载地址  
                     }, 3000);
                 } catch (e) { }
             }
